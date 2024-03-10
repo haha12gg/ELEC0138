@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forum Details</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <a class="navbar-brand" href="/forum">Forum</a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav">
+                <li class="nav-item active">
+                     <a class="nav-link" href="/forum">Home <span class="sr-only">(current)</span></a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/create_forum">Create Forum</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav ml-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/logout">Log Out</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+    <div class="container mt-5">
+        <h2>{{ forum.Topic }}</h2>
+        <p><strong>Date:</strong> {{ forum.Date }}</p>
+        <p><strong>Author:</strong> {{ forum.Author }}</p>
+        <div>
+            <h4>Content</h4>
+            <p>{{ forum.Content }}</p>
+        </div>
+        {% if replies %}
+        <div class="mt-5">
+            <h4>Replies</h4>
+            {% for reply in replies %}
+            <div class="card mb-2">
+                <div class="card-body">
+                    <p class="card-text">{{ reply.Content }}</p>
+                    <footer class="blockquote-footer">Posted by {{ reply.Author }} on {{ reply.Date }}</footer>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
