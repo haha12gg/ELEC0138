@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, url_for, session
+from flask import Flask, request, redirect, render_template, url_for, session,flash
 import boto3
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime
@@ -45,7 +45,7 @@ def registration():
 
         # 添加账号
         table.put_item(Item={
-            'email_address': email_address,
+            'Email_address': email_address,
             'password': password,
             'Role': 'student'
         })
@@ -98,8 +98,8 @@ def forum_specific():
         return redirect(url_for('login'))
     id = request.args.get('id')
     date = request.args.get('date')
-    print("ID here")
-    print(id)
+    # print("ID here")
+    # print(id)
     # 获取指定的论坛帖子
     response = forum_table.get_item(Key={'ID': id,'Date':date})
     forum = response.get('Item', {})
@@ -108,7 +108,7 @@ def forum_specific():
     replies = forum_table.scan(
         FilterExpression=Attr('Associate').eq(id)
     ).get('Items', [])
-    replies.sort(key=lambda x: x['Date'], reverse=True)
+    replies.sort(key=lambda x: x['Date'], reverse=False)
 
     return render_template('forum_specific_w.html', forum=forum, replies=replies)
 
@@ -116,6 +116,48 @@ def forum_specific():
 def logout():
     session.pop('user', None)  # 移除用户session
     return redirect(url_for('login'))
+
+@app.route('/reply', methods=['POST'])
+def post_reply():
+    if 'user' not in session:
+        # 用户未登录
+        flash('Please log in to reply.')
+        return redirect(url_for('login'))
+
+    forum_id = request.form['forum_id']
+    forum_date = request.form['forum_date']
+
+    content = request.form['content']
+    user_email = session['user']  # 假设用户email已存储在session中
+
+    # 添加回复到DynamoDB
+    reply_id = str(uuid.uuid4())
+    current_time = datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
+    forum_table.put_item(Item={
+        'ID': reply_id,
+        'Date': current_time,
+        'Author': user_email,
+        'Content': content,
+        'Replys': 0,
+        'Associate': forum_id,
+        'Topic': ''  # 回复没有Topic
+    })
+
+    # 更新原帖子的Replys计数
+    forum_table.update_item(
+        Key={
+            'ID': forum_id,
+            'Date': forum_date  # 使用Date作为排序键
+        },
+        UpdateExpression='SET Replys = Replys + :val',
+        ExpressionAttributeValues={':val': 1}
+    )
+
+    return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
+
+@app.template_filter('formatdatetime')
+def format_datetime_filter(datetime_str):
+    return datetime_str.replace('T', ' ').replace('Z', '')
 
 if __name__ == '__main__':
     app.run(debug=True)

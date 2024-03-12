@@ -30,7 +30,7 @@
     </nav>
     <div class="container mt-5">
         <h2>{{ forum.Topic }}</h2>
-        <p><strong>Date:</strong> {{ forum.Date }}</p>
+        <p><strong>Date:</strong> {{ forum.Date | formatdatetime }}</p>
         <p><strong>Author:</strong> {{ forum.Author }}</p>
         <div>
             <h4>Content</h4>
@@ -43,12 +43,23 @@
             <div class="card mb-2">
                 <div class="card-body">
                     <p class="card-text">{{ reply.Content }}</p>
-                    <footer class="blockquote-footer">Posted by {{ reply.Author }} on {{ reply.Date }}</footer>
+                    <footer class="blockquote-footer">Posted by {{ reply.Author }} on {{ forum.Date | formatdatetime }}</footer>
                 </div>
             </div>
             {% endfor %}
         </div>
         {% endif %}
+        <div class="mt-5">
+            <h4>Leave a Reply</h4>
+            <form action="{{ url_for('post_reply') }}" method="post">
+                <input type="hidden" name="forum_id" value="{{ forum.ID }}">
+                <input type="hidden" name="forum_date" value="{{ forum.Date }}">
+                <div class="form-group">
+                    <textarea class="form-control" name="content" rows="3" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Reply</button>
+            </form>
+        </div>
     </div>
 </body>
 </html>

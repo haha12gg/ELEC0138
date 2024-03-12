@@ -42,7 +42,7 @@
             <tbody>
                 {% for forum in forums %}
                 <tr>
-                    <td>{{ forum.Date }}</td>
+                    <td>{{ forum.Date | formatdatetime }}</td>
                     <td><a href="/forum_specific?id={{ forum.ID }}&date={{ forum.Date }}">{{ forum.Topic }}</a></td>
                     <td>{{ forum.Author }}</td>
                     <td>{{ forum.Replys }}</td>
