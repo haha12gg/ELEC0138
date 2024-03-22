@@ -3,19 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Forum Home</title>
+    <title>Forum</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar-brand,
+        .navbar-nav .nav-link {
+            color: #fff;
+        }
+        .navbar-brand:hover,
+        .navbar-nav .nav-link:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+        .forum-header {
+            background-color: #fff;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .forum-header h1 {
+            margin-bottom: 0;
+            color: #007bff;
+        }
+        .forum-actions {
+            margin-bottom: 20px;
+        }
+        .forum-table {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .forum-table th {
+            background-color: #007bff;
+            color: #fff;
+        }
+        .forum-table td {
+            vertical-align: middle;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <a class="navbar-brand" href="#">Forum</a>
+    <nav class="navbar navbar-expand-lg">
+        <a class="navbar-brand" href="/forum">Forum</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item active">
-                    <a class="nav-link" href="/forum">Home <span class="sr-only">(current)</span></a>
+                     <a class="nav-link" href="/forum">Home <span class="sr-only">(current)</span></a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/create_forum">Create Forum</a>
@@ -28,24 +71,45 @@
             </ul>
         </div>
     </nav>
-    <div class="container mt-3">
-        <h2>Forum Topics</h2>
-        <table class="table">
+    <div class="container mt-5">
+        <div class="forum-header">
+            <h1>Forum</h1>
+        </div>
+        <div class="forum-actions">
+            <a href="/create_forum" class="btn btn-primary">Create New Forum</a>
+        </div>
+        <table class="table table-striped forum-table">
             <thead>
                 <tr>
-                    <th scope="col">Date</th>
-                    <th scope="col">Topic</th>
-                    <th scope="col">Author</th>
-                    <th scope="col">Replies</th>
+                    <th>Topic</th>
+                    <th>Author</th>
+                    <th>Date</th>
+                    <th>Replies</th>
+                    <th>Action</th>
+                    {% if user_role == 'admin' %}
+                    <th>Admin Action</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
                 {% for forum in forums %}
                 <tr>
-                    <td>{{ forum.Date | formatdatetime }}</td>
-                    <td><a href="/forum_specific?id={{ forum.ID }}&date={{ forum.Date }}">{{ forum.Topic }}</a></td>
+                    <td>{{ forum.Topic }}</td>
                     <td>{{ forum.Author }}</td>
+                    <td>{{ forum.Date | formatdatetime }}</td>
                     <td>{{ forum.Replys }}</td>
+                    <td>
+                        <a href="{{ url_for('forum_specific', id=forum.ID, date=forum.Date) }}" class="btn btn-primary btn-sm">View</a>
+                    </td>
+                    {% if user_role == 'admin' %}
+                    <td>
+                        <form action="{{ url_for('delete_forum') }}" method="post" class="d-inline">
+                            <input type="hidden" name="forum_id" value="{{ forum.ID }}">
+                            <input type="hidden" name="forum_date" value="{{ forum.Date }}">
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </form>
+                    </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

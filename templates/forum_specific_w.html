@@ -5,9 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Forum Details</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .navbar {
+            background-color: #007bff;
+        }
+        .navbar-brand,
+        .navbar-nav .nav-link {
+            color: #fff;
+        }
+        .navbar-brand:hover,
+        .navbar-nav .nav-link:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+        .forum-details-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 30px;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .forum-details-container h2 {
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .forum-details-container p {
+            margin-bottom: 10px;
+        }
+        .forum-details-container .card {
+            margin-bottom: 20px;
+            border: none;
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+        }
+        .forum-details-container .card-body {
+            padding: 20px;
+        }
+        .forum-details-container .blockquote-footer {
+            margin-top: 10px;
+            color: #6c757d;
+        }
+        .forum-details-container .form-group label {
+            font-weight: bold;
+        }
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+        }
+        .btn-primary:hover {
+            background-color: #0056b3;
+            border-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    <nav class="navbar navbar-expand-lg">
         <a class="navbar-brand" href="/forum">Forum</a>
         <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
@@ -15,7 +71,7 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav">
                 <li class="nav-item active">
-                     <a class="nav-link" href="/forum">Home <span class="sr-only">(current)</span></a>
+                     <a class="nav-link" href="/forum">Home</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="/create_forum">Create Forum</a>
@@ -29,36 +85,41 @@
         </div>
     </nav>
     <div class="container mt-5">
-        <h2>{{ forum.Topic }}</h2>
-        <p><strong>Date:</strong> {{ forum.Date | formatdatetime }}</p>
-        <p><strong>Author:</strong> {{ forum.Author }}</p>
-        <div>
-            <h4>Content</h4>
-            <p>{{ forum.Content }}</p>
-        </div>
-        {% if replies %}
-        <div class="mt-5">
-            <h4>Replies</h4>
-            {% for reply in replies %}
-            <div class="card mb-2">
+        <div class="forum-details-container">
+            <h2>{{ forum.Topic }}</h2>
+            <p><strong>Date:</strong> {{ forum.Date | formatdatetime }}</p>
+            <p><strong>Author:</strong> {{ forum.Author }}</p>
+            <div class="card">
                 <div class="card-body">
-                    <p class="card-text">{{ reply.Content }}</p>
-                    <footer class="blockquote-footer">Posted by {{ reply.Author }} on {{ forum.Date | formatdatetime }}</footer>
+                    <h5 class="card-title">Content</h5>
+                    <p class="card-text">{{ forum.Content }}</p>
                 </div>
             </div>
-            {% endfor %}
-        </div>
-        {% endif %}
-        <div class="mt-5">
-            <h4>Leave a Reply</h4>
-            <form action="{{ url_for('post_reply') }}" method="post">
-                <input type="hidden" name="forum_id" value="{{ forum.ID }}">
-                <input type="hidden" name="forum_date" value="{{ forum.Date }}">
-                <div class="form-group">
-                    <textarea class="form-control" name="content" rows="3" required></textarea>
+            {% if replies %}
+            <div class="mt-5">
+                <h4>Replies</h4>
+                {% for reply in replies %}
+                <div class="card">
+                    <div class="card-body">
+                        <p class="card-text">{{ reply.Content }}</p>
+                        <footer class="blockquote-footer">Posted by {{ reply.Author }} on {{ forum.Date | formatdatetime }}</footer>
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary">Submit Reply</button>
-            </form>
+                {% endfor %}
+            </div>
+            {% endif %}
+            <div class="mt-5">
+                <h4>Leave a Reply</h4>
+                <form action="{{ url_for('post_reply') }}" method="post">
+                    <input type="hidden" name="forum_id" value="{{ forum.ID }}">
+                    <input type="hidden" name="forum_date" value="{{ forum.Date }}">
+                    <div class="form-group">
+                        <label for="content">Reply</label>
+                        <textarea class="form-control" id="content" name="content" rows="4" placeholder="Enter your reply" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Submit Reply</button>
+                </form>
+            </div>
         </div>
     </div>
 </body>
