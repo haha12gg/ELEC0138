@@ -128,6 +128,83 @@ def registration():
     return render_template('registration_w.html', error=error)
 
 
+@app.route('/waiting')
+def waiting():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    return render_template('waiting.html')
+
+
+@app.route('/check_access')
+def check_access():
+    if 'user' not in session:
+        return jsonify({'allowed': False})
+
+    response = confirm_table.get_item(Key={'Email_address': session['user']})
+    allowed = response.get('Item', {}).get('Allowed', False)
+    return jsonify({'allowed': allowed})
+
+
+@app.route('/authenticate', methods=['GET', 'POST'])
+def authenticate():
+    auth_id = request.args.get('auth_id')
+    expiry_str = request.args.get('expiry')
+
+    if not auth_id or not expiry_str:
+        error = 'Invalid authentication link.'
+        return render_template('authenticate.html', error=error)
+
+    expiry = datetime.strptime(expiry_str, '%Y-%m-%d %H:%M:%S')
+
+    if datetime.now() > expiry:
+        error = 'Authentication link has expired.'
+        return render_template('authenticate.html', error=error)
+
+    if auth_id != session.get('auth_id'):
+        error = 'Invalid authentication link.'
+        return render_template('authenticate.html', error=error)
+
+    if request.method == 'POST':
+        email = request.form['email']
+        random_code = request.form['random_code']
+
+        if email == session.get('user') and random_code == session.get('random_code'):
+            return redirect(url_for('confirm'))
+        else:
+            error = 'Invalid email or random code. Please try again.'
+            return render_template('authenticate.html', error=error)
+
+    return render_template('authenticate.html')
+
+
+@app.route('/confirm', methods=['GET', 'POST'])
+def confirm():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        email = request.form['email']
+        action = request.form['action']
+
+        if action == 'Allow':
+            confirm_table.update_item(
+                Key={'Email_address': email},
+                UpdateExpression='SET #allowed = :val',
+                ExpressionAttributeNames={'#allowed': 'Allowed'},
+                ExpressionAttributeValues={':val': True}
+            )
+        elif action == 'Deny':
+            confirm_table.delete_item(Key={'Email_address': email})
+
+    # 获取与登录邮箱相关的待确认请求
+    response = confirm_table.scan(FilterExpression=Attr('Email_address').eq(session['user']) & Attr('Allowed').eq(False))
+    requests = response.get('Items', [])
+
+    return render_template('confirm.html', requests=requests)
+
+
+
 @app.route('/forum')
 def forum():
     if 'user' not in session:
@@ -253,17 +330,6 @@ def generate_verification_code():
 def generate_random_code():
     characters = string.ascii_letters + string.digits
     return ''.join(random.choices(characters, k=24))
-
-
-def generate_verification_code():
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choices(characters, k=6))
-
-
-def generate_random_code():
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choices(characters, k=24))
-
 
 def send_verification_email(email, code, random_code):
     authenticate_url = url_for('authenticate', _external=True)

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirm Requests</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container">
+    <h1 class="mt-5">Confirm Requests</h1>
+    {% if requests %}
+    <table class="table">
+        <thead>
+        <tr>
+            <th>Email</th>
+            <th>Timestamp</th>
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for request in requests %}
+        <tr>
+            <td>{{ request.Email_address }}</td>
+            <td>{{ request.Timestamp }}</td>
+            <td>
+                <form method="post" class="d-inline">
+                    <input type="hidden" name="email" value="{{ request.Email_address }}">
+                    <button type="submit" name="action" value="Allow" class="btn btn-success">Allow</button>
+                </form>
+                <form method="post" class="d-inline">
+                    <input type="hidden" name="email" value="{{ request.Email_address }}">
+                    <button type="submit" name="action" value="Deny" class="btn btn-danger">Deny</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p>No pending requests.</p>
+    {% endif %}
+</div>
+</body>
+</html>

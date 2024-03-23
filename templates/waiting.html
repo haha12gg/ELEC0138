@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Waiting</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .waiting-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+        }
+        .waiting-container h1 {
+            font-size: 36px;
+            margin-bottom: 20px;
+            color: #007bff;
+        }
+        .waiting-container p {
+            font-size: 18px;
+            margin-bottom: 30px;
+        }
+        .spinner {
+            display: inline-block;
+            width: 60px;
+            height: 60px;
+            border: 4px solid #007bff;
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="waiting-container">
+    <h1>Waiting for Confirmation</h1>
+    <p>Your request to access the forum is pending confirmation. Please wait for an administrator to approve your request.</p>
+    <div class="spinner"></div>
+</div>
+
+<script>
+    function checkAccessStatus() {
+        fetch('/check_access')
+            .then(response => response.json())
+            .then(data => {
+                if (data.allowed) {
+                    window.location.href = '/forum';
+                } else {
+                    setTimeout(checkAccessStatus, 5000);
+                }
+            });
+    }
+
+    setTimeout(checkAccessStatus, 5000);
+</script>
+</body>
+</html>
