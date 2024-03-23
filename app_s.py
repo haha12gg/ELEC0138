@@ -11,6 +11,7 @@ from PIL import Image
 from random import randint
 from io import BytesIO
 from flask import send_file
+from urllib.parse import urlencode
 
 
 app = Flask(__name__)
@@ -18,12 +19,13 @@ app.secret_key = os.urandom(24)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
 
-# 配置DynamoDB
+# DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
                           aws_access_key_id='AKIA4MTWN2ZSFUOUEKGY',
                           aws_secret_access_key='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')
 table = dynamodb.Table('account_weak')
 forum_table = dynamodb.Table('forums_weak')
+confirm_table = dynamodb.Table('confirm')
 
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
@@ -38,6 +40,54 @@ mail = Mail(app)
 def home():
     return redirect(url_for('login'))
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    error = None
+    account_id = request.form.get('account_id', '')
+    password = request.form.get('password', '')
+
+    if request.method == 'POST':
+        email_code = request.form['email_code']
+        captcha = request.form.get('captcha', '')
+        action = request.form.get('action')
+
+        if action == "Send Code":
+            # 发送邮箱验证码
+            verification_code = generate_verification_code()
+            random_code = generate_random_code()
+            auth_id = str(uuid.uuid4())  # 生成唯一的认证 ID
+            auth_expiry = datetime.now() + timedelta(minutes=5)  # 设置认证链接的过期时间
+            auth_params = urlencode({'auth_id': auth_id, 'expiry': auth_expiry.strftime('%Y-%m-%d %H:%M:%S')})
+            authenticate_url = url_for('authenticate', _external=True) + '?' + auth_params
+            send_verification_email(account_id, verification_code, random_code, authenticate_url)
+            session['verification_code'] = verification_code
+            session['random_code'] = random_code
+            session['auth_id'] = auth_id
+            session['auth_expiry'] = auth_expiry.strftime('%Y-%m-%d %H:%M:%S')
+
+            return render_template('login_w.html', show_captcha=True, account_id=account_id, password=password)
+
+        if action == "Login":
+            # 检查账号、密码
+            response = table.get_item(Key={'Email_address': account_id})
+            if 'Item' not in response or response['Item']['password'] != password:
+                error = 'Invalid Credentials. Please try again.'
+            elif email_code != session.get('verification_code'):
+                error = 'Invalid email code. Please try again.'
+            elif captcha.lower() != session.get('captcha', '').lower():
+                error = 'Invalid captcha. Please try again.'
+            else:
+                session['user'] = account_id
+                session.permanent = True  # 设置session为永久性的
+                confirm_table.put_item(Item={
+                    'Email_address': account_id,
+                    'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                    'Allowed': False
+                })
+                return redirect(url_for('waiting'))
+
+    return render_template('login_w.html', error=error, show_captcha=True, account_id=account_id, password=password)
+
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
     error = None
@@ -49,11 +99,17 @@ def registration():
         action = request.form.get('action')
 
         if action == "Send Code":
-            # 发送邮箱验证码
-            verification_code = generate_verification_code()
-            send_verification_email(email_address, verification_code, "")
-            session['verification_code'] = verification_code
-            return render_template('registration_w.html', email_address=email_address, password=password)
+            # Check if email address is registered
+            response = table.get_item(Key={'Email_address': email_address})
+            if 'Item' in response:
+                error = 'This email address is already registered.'
+            else:
+                # send verification code
+                verification_code = generate_verification_code()
+                send_verification_email(email_address, verification_code, "")
+                session['verification_code'] = verification_code
+
+            return render_template('registration_w.html', email_address=email_address, password=password, error=error)
 
         if action == "Register":
             if email_code != session.get('verification_code'):
@@ -61,7 +117,7 @@ def registration():
             elif captcha.lower() != session.get('captcha', '').lower():
                 error = 'Invalid captcha. Please try again.'
             else:
-                # 添加账号
+                # register account
                 table.put_item(Item={
                     'Email_address': email_address,
                     'password': password,
@@ -72,30 +128,12 @@ def registration():
     return render_template('registration_w.html', error=error)
 
 
-@app.route('/registration', methods=['GET', 'POST'])
-def registration():
-    if request.method == 'POST':
-        email_address = request.form['email_address']
-        password = request.form['password']
-
-        # 添加账号
-        table.put_item(Item={
-            'Email_address': email_address,
-            'password': password,
-            'Role': 'student'
-        })
-
-        return redirect(url_for('login'))
-
-    return render_template('registration_w.html')
-
-
 @app.route('/forum')
 def forum():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    # 从DynamoDB获取论坛帖子
+    # Get forums from DB
     response = forum_table.scan(
         FilterExpression=Attr('Associate').eq('None'),
     )
@@ -117,7 +155,7 @@ def create_forum():
         forum_table.put_item(Item={
             'ID': str(uuid.uuid4()),
             'Date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'Author': session['user'],  # 假设已通过登录流程设置
+            'Author': session['user'],
             'Content': content,
             'Replys': 0,
             'Associate': 'None',
@@ -135,11 +173,11 @@ def forum_specific():
     date = request.args.get('date')
     # print("ID here")
     # print(id)
-    # 获取指定的论坛帖子
+    # get specific forum
     response = forum_table.get_item(Key={'ID': id,'Date':date})
     forum = response.get('Item', {})
 
-    # 获取回复
+    # get replies
     replies = forum_table.scan(
         FilterExpression=Attr('Associate').eq(id)
     ).get('Items', [])
@@ -155,7 +193,7 @@ def logout():
 @app.route('/reply', methods=['POST'])
 def post_reply():
     if 'user' not in session:
-        # 用户未登录
+        # If not login
         flash('Please log in to reply.')
         return redirect(url_for('login'))
 
@@ -163,7 +201,7 @@ def post_reply():
     forum_date = request.form['forum_date']
 
     content = request.form['content']
-    user_email = session['user']  # 假设用户email已存储在session中
+    user_email = session['user']
 
     # 添加回复到DynamoDB
     reply_id = str(uuid.uuid4())
@@ -175,14 +213,14 @@ def post_reply():
         'Content': content,
         'Replys': 0,
         'Associate': forum_id,
-        'Topic': ''  # 回复没有Topic
+        'Topic': ''
     })
 
-    # 更新原帖子的Replys计数
+    # update replies count
     forum_table.update_item(
         Key={
             'ID': forum_id,
-            'Date': forum_date  # 使用Date作为排序键
+            'Date': forum_date
         },
         UpdateExpression='SET Replys = Replys + :val',
         ExpressionAttributeValues={':val': 1}
@@ -191,19 +229,15 @@ def post_reply():
     return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
 
 def captcha():
-    # 生成验证码图片
+    # generate captcha image
     captcha_text = generate_captcha()
     captcha_image = generate_captcha_image(captcha_text)
 
-    # 将验证码文本存储在session中
+    # store code into session
     session['captcha'] = captcha_text
-
-    # 将图片数据转换为字节流
     img_io = BytesIO()
     captcha_image.save(img_io, 'PNG')
     img_io.seek(0)
-
-    # 返回图片数据
     return send_file(img_io, mimetype='image/png')
 
 
