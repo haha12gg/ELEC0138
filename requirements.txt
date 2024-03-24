@@ -27,3 +27,7 @@ termcolor==1.1.0
 urllib3 @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_6ecjc0andm/croot/urllib3_1707349238568/work
 wcwidth==0.1.9
 Werkzeug @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_71eeseo_rw/croot/werkzeug_1706210087243/work
+
+boto3~=1.29.1
+flask~=2.2.5
+itsdangerous~=2.0.1
