@@ -47,23 +47,22 @@
         <div class="col-md-6">
             <form class="form-signin" method="post">
                 <h1>Please sign in</h1>
-                <label for="inputEmail">Account ID</label>
-                <input type="text" id="inputEmail" class="form-control" placeholder="Account ID" required autofocus name="account_id" value="{{ account_id }}">
-                <label for="inputPassword">Password</label>
-                <input type="password" id="inputPassword" class="form-control" placeholder="Password" required name="password" value="{{ password }}">
-                <div class="input-group mb-3">
-                    <input type="text" class="form-control" placeholder="Email Code" name="email_code">
-                    <div class="input-group-append">
-                        <button class="btn btn-outline-secondary" type="submit" name="action" value="Send Code">Send Code</button>
-                    </div>
+                <div class="form-group">
+                    <label for="inputEmail">Account ID</label>
+                    <input type="text" id="inputEmail" class="form-control" placeholder="Account ID" required autofocus name="account_id" value="{{ account_id }}">
                 </div>
-                <div class="mb-3 text-center">
+                <div class="form-group">
+                    <label for="inputPassword">Password</label>
+                    <input type="password" id="inputPassword" class="form-control" placeholder="Password" required name="password" value="{{ password }}">
+                </div>
+                <div class="form-group text-center">
                     <img src="{{ url_for('captcha') }}?r=Math.random()" alt="Captcha" class="img-fluid captcha-image" onclick="this.src='{{ url_for('captcha') }}?r=' + Math.random()">
                 </div>
-                <div class="mb-3">
-                    <input type="text" class="form-control" placeholder="Captcha" name="captcha">
+                <div class="form-group">
+                    <label for="captcha">Captcha</label>
+                    <input type="text" id="captcha" class="form-control" placeholder="Captcha" name="captcha">
                 </div>
-                <button class="btn btn-lg btn-primary btn-block" type="submit" name="action" value="Login">Sign in</button>
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
                 <div class="text-center mt-3">
                     <a href="/registration" class="btn btn-link">Registration</a>
                 </div>
