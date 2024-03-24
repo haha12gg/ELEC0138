@@ -52,11 +52,11 @@ def login():
         action = request.form.get('action')
 
         if action == "Send Code":
-            # 发送邮箱验证码
+            # send verification code
             verification_code = generate_verification_code()
             random_code = generate_random_code()
-            auth_id = str(uuid.uuid4())  # 生成唯一的认证 ID
-            auth_expiry = datetime.now() + timedelta(minutes=5)  # 设置认证链接的过期时间
+            auth_id = str(uuid.uuid4())  # generate id
+            auth_expiry = datetime.now() + timedelta(minutes=5)  # set expire time
             auth_params = urlencode({'auth_id': auth_id, 'expiry': auth_expiry.strftime('%Y-%m-%d %H:%M:%S')})
             authenticate_url = url_for('authenticate', _external=True) + '?' + auth_params
             send_verification_email(account_id, verification_code, random_code, authenticate_url)
@@ -197,7 +197,7 @@ def confirm():
         elif action == 'Deny':
             confirm_table.delete_item(Key={'Email_address': email})
 
-    # 获取与登录邮箱相关的待确认请求
+    # get request
     response = confirm_table.scan(FilterExpression=Attr('Email_address').eq(session['user']) & Attr('Allowed').eq(False))
     requests = response.get('Items', [])
 
@@ -228,7 +228,7 @@ def create_forum():
     if request.method == 'POST':
         topic = request.form['topic']
         content = request.form['content']
-        # 创建帖子
+        # create forum
         forum_table.put_item(Item={
             'ID': str(uuid.uuid4()),
             'Date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
@@ -242,6 +242,26 @@ def create_forum():
 
     return render_template('create_forum_w.html')
 
+@app.route('/delete_forum', methods=['POST'])
+def delete_forum():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    forum_id = request.form['forum_id']
+    forum_date = request.form['forum_date']
+
+    # Delete Main Forum
+    forum_table.delete_item(Key={'ID': forum_id, 'Date': forum_date})
+
+    # Delete associated forum
+    replies = forum_table.scan(
+        FilterExpression=Attr('Associate').eq(forum_id)
+    ).get('Items', [])
+
+    for reply in replies:
+        forum_table.delete_item(Key={'ID': reply['ID'], 'Date': reply['Date']})
+
+    return redirect(url_for('forum'))
 @app.route('/forum_specific')
 def forum_specific():
     if 'user' not in session:
@@ -264,7 +284,7 @@ def forum_specific():
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)  # 移除用户session
+    session.pop('user', None)  # pop session
     return redirect(url_for('login'))
 
 @app.route('/reply', methods=['POST'])
