@@ -48,9 +48,9 @@
             <form class="form-signin" method="post">
                 <h1>Registration</h1>
                 <label for="inputEmail">Email address</label>
-                <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus name="email_address">
+                <input type="email" id="inputEmail" class="form-control" placeholder="Email address" required autofocus name="email_address" value="{{ email_address }}">
                 <label for="inputPassword">Password</label>
-                <input type="password" id="inputPassword" class="form-control" placeholder="Password" required name="password">
+                <input type="password" id="inputPassword" class="form-control" placeholder="Password" required name="password" value="{{ password }}">
                 <div class="input-group mb-3">
                     <input type="text" class="form-control" placeholder="Email Code" name="email_code">
                     <div class="input-group-append">
