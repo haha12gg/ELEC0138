@@ -1,33 +1,6 @@
-awsebcli==3.20.10
-blessed==1.20.0
-blinker==1.7.0
-boto3 @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_81r_9ylvdx/croot/boto3_1700157107771/work
-botocore @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_b8_80bn824/croot/botocore_1700144661657/work
-Brotli @ file:///Users/ec2-user/ci_py311/brotli-split_1678379922007/work
-captcha==0.5.0
-cement==2.8.2
-click @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_f27dk3zwrb/croot/click_1698129816363/work
-colorama==0.4.3
-distlib==0.3.8
-filelock==3.13.1
-Flask @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_0ciz1g6mz5/croot/flask_1702980028646/work
-Flask-Mail==0.9.1
-itsdangerous @ file:///tmp/build/80754af9/itsdangerous_1621432558163/work
-Jinja2 @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_524l12w9yv/croot/jinja2_1706733629737/work
-jmespath @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_d04w00_imo/croot/jmespath_1700144576885/work
-MarkupSafe @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_3a_cffw83x/croot/markupsafe_1704205995714/work
-pathspec==0.10.1
-pillow==10.2.0
-PySocks @ file:///Users/ec2-user/ci_py311/pysocks_1678315868424/work
-python-dateutil @ file:///tmp/build/80754af9/python-dateutil_1626374649649/work
-s3transfer @ file:///private/var/folders/c_/qfmhj66j0tn016nkx_th4hxm0000gp/T/abs_97wj16umml/croot/s3transfer_1699888100731/work
-semantic-version==2.8.5
-six @ file:///tmp/build/80754af9/six_1644875935023/work
-termcolor==1.1.0
-urllib3 @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_6ecjc0andm/croot/urllib3_1707349238568/work
-wcwidth==0.1.9
-Werkzeug @ file:///private/var/folders/sy/f16zz6x50xz3113nwtb9bvq00000gp/T/abs_71eeseo_rw/croot/werkzeug_1706210087243/work
-
-boto3~=1.29.1
-flask~=2.2.5
-itsdangerous~=2.0.1
+boto3==1.29.1
+django_recaptcha==4.0.0
+Flask==2.2.5
+Flask_Mail==0.9.1
+itsdangerous==2.0.1
+Pillow==10.2.0
