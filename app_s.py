@@ -35,6 +35,7 @@ app.config['MAIL_USE_TLS'] = True
 app.config['MAIL_USERNAME'] = 'wujunliang1102@gmail.com'
 app.config['MAIL_PASSWORD'] = 'aerxmdoqfzhkahyx'
 app.config['MAIL_DEFAULT_SENDER'] = 'wujunliang1102@gmail.com'
+app.config['MAIL_USE_UNICODE'] = True
 
 mail = Mail(app)
 
@@ -434,9 +435,9 @@ def generate_random_code():
 def send_verification_email(email, code, random_code, authenticate_url=""):
     msg = Message('Verification Code', sender=app.config['MAIL_USERNAME'], recipients=[email])
     if authenticate_url:
-        msg.body = f'Your verification code is: {code}\nYour random code is: {random_code}\n\nPlease click the following link to authenticate (valid for 5 minutes): {authenticate_url}'
+        msg.body = f'Your verification code is: {code}\nYour random code is: {random_code}\n\nPlease click the following link to authenticate (valid for 5 minutes): {authenticate_url}'.encode('utf-8')
     else:
-        msg.body = f'Your verification code is: {code}'
+        msg.body = f'Your verification code is: {code}'.encode('utf-8')
     mail.send(msg)
 
 def generate_captcha():
