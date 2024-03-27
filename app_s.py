@@ -425,8 +425,8 @@ def format_datetime_filter(datetime_str):
     return datetime_str.replace('T', ' ').replace('Z', '')
 
 def generate_verification_code():
-    characters = string.ascii_letters + string.digits
-    return ''.join(random.choices(characters, k=6))
+    characters = ''.join(random.choices(string.digits, k=6))
+    return characters
 
 def generate_random_code():
     characters = string.ascii_letters + string.digits
