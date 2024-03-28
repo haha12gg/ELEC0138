@@ -24,7 +24,7 @@ app.config['SECRET_KEY'] = os.urandom(24).hex()
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
                           aws_access_key_id='AKIA4MTWN2ZSFUOUEKGY',
                           aws_secret_access_key='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')
-table = dynamodb.Table('account_weak')
+table = dynamodb.Table('Account')
 forum_table = dynamodb.Table('forums_weak')
 confirm_table = dynamodb.Table('confirm')
 
