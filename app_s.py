@@ -85,7 +85,7 @@ def login():
 
                 return redirect(url_for('verify'))
 
-    return render_template('login_w.html', error=error, show_captcha=True, account_id=account_id, password=password)
+    return render_template('login_s.html', error=error, show_captcha=True, account_id=account_id, password=password)
 
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
@@ -108,7 +108,7 @@ def registration():
                 send_verification_email(email_address, verification_code, "")
                 session['verification_code'] = verification_code
 
-            return render_template('registration_w.html', email_address=email_address, password=password, error=error)
+            return render_template('registration_s.html', email_address=email_address, password=password, error=error)
 
         if action == "Register":
             if email_code != session.get('verification_code'):
@@ -125,7 +125,7 @@ def registration():
                 })
                 return redirect(url_for('login'))
 
-    return render_template('registration_w.html', error=error)
+    return render_template('registration_s.html', error=error)
 
 @app.route('/waiting')
 def waiting():
