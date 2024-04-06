@@ -155,6 +155,43 @@ def post_reply():
 
     return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
 
+@app.route('/profile')
+def profile():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    user_email = session['user']
+    user = table.get_item(Key={'Email_address': user_email}).get('Item', {})
+
+    return render_template('profile_w.html', user_email=user_email)
+
+@app.route('/change_password', methods=['GET', 'POST'])
+def change_password():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    user_email = session['user']
+    error = None
+
+    if request.method == 'POST':
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+
+
+        if new_password != confirm_password:
+            error = 'New password and confirm password do not match.'
+        else:
+            table.update_item(
+                Key={'Email_address': user_email},
+                UpdateExpression='SET password = :val',
+                ExpressionAttributeValues={':val': new_password}
+            )
+            flash('Password changed successfully.')
+            return redirect(url_for('profile'))
+
+    return render_template('change_password_w.html', error=error)
+
+
 @app.template_filter('formatdatetime')
 def format_datetime_filter(datetime_str):
     return datetime_str.replace('T', ' ').replace('Z', '')
