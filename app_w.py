@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, url_for, session,flash
+from flask import Flask, request, redirect, render_template, url_for, session,flash, get_flashed_messages
 import boto3
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime
@@ -21,6 +21,7 @@ def home():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     error = None
+    message = get_flashed_messages()
     if request.method == 'POST':
         account_id = request.form['account_id']
         password = request.form['password']
@@ -34,7 +35,7 @@ def login():
                 return redirect(url_for('forum'))
             else:
                 error = 'Invalid Credentials. Please try again.'
-    return render_template('login_w.html', error=error)
+    return render_template('login_w.html', error=error, message=message)
 
 
 @app.route('/registration', methods=['GET', 'POST'])
@@ -186,8 +187,9 @@ def change_password():
                 UpdateExpression='SET password = :val',
                 ExpressionAttributeValues={':val': new_password}
             )
-            flash('Password changed successfully.')
-            return redirect(url_for('profile'))
+            logout()
+            flash('Password changed successfully. Please log in again.')
+            return redirect(url_for('login'))
 
     return render_template('change_password_w.html', error=error)
 
