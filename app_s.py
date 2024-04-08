@@ -1,4 +1,4 @@
-from flask import Flask, request, redirect, render_template, url_for, session, flash, jsonify, make_response
+from flask import Flask, request, redirect, render_template, url_for, session, flash, jsonify, make_response, get_flashed_messages
 import boto3
 from boto3.dynamodb.conditions import Attr
 from datetime import datetime, timedelta
@@ -48,6 +48,7 @@ def login():
     error = None
     account_id = request.form.get('account_id', '')
     password = request.form.get('password', '')
+    message = get_flashed_messages()
 
     if request.method == 'POST':
         captcha = request.form.get('captcha', '')
@@ -85,7 +86,12 @@ def login():
 
                 return redirect(url_for('verify'))
 
-    return render_template('login_s.html', error=error, show_captcha=True, account_id=account_id, password=password)
+    return render_template('login_s.html',
+                           error=error,
+                           show_captcha=True,
+                           account_id=account_id,
+                           password=password,
+                           message=message)
 
 @app.route('/registration', methods=['GET', 'POST'])
 def registration():
@@ -259,8 +265,9 @@ def change_password():
                 UpdateExpression='SET password = :val',
                 ExpressionAttributeValues={':val': new_password}
             )
-            flash('Password changed successfully.')
-            return redirect(url_for('profile'))
+            logout()
+            flash('Password changed successfully. Please log in again.')
+            return redirect(url_for('login'))
 
     return render_template('change_password.html', error=error)
 
