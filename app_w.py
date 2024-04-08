@@ -7,7 +7,7 @@ import uuid,os
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-# 配置DynamoDB
+# DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
                           aws_access_key_id='AKIA4MTWN2ZSFUOUEKGY',
                           aws_secret_access_key='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')
@@ -27,10 +27,10 @@ def login():
         action = request.form.get('action')
 
         if action == "Login":
-            # 检查账号和密码
+            # check password
             response = table.get_item(Key={'Email_address': account_id})
             if 'Item' in response and response['Item']['password'] == password:
-                session['user'] = account_id  # 登录成功，设置用户session
+                session['user'] = account_id  # set session
                 return redirect(url_for('forum'))
             else:
                 error = 'Invalid Credentials. Please try again.'
@@ -43,7 +43,7 @@ def registration():
         email_address = request.form['email_address']
         password = request.form['password']
 
-        # 添加账号
+        # add account
         table.put_item(Item={
             'Email_address': email_address,
             'password': password,
@@ -60,12 +60,12 @@ def forum():
     if 'user' not in session:
         return redirect(url_for('login'))
 
-    # 从DynamoDB获取论坛帖子
+    # get forums
     response = forum_table.scan(
         FilterExpression=Attr('Associate').eq('None'),
     )
     forums = response.get('Items', [])
-    forums.sort(key=lambda x: x['Date'], reverse=True)  # 确保按日期降序
+    forums.sort(key=lambda x: x['Date'], reverse=True)  # sort by date
 
     return render_template('forum_w.html', forums=forums)
 
@@ -78,11 +78,11 @@ def create_forum():
     if request.method == 'POST':
         topic = request.form['topic']
         content = request.form['content']
-        # 创建帖子
+        # create forum
         forum_table.put_item(Item={
             'ID': str(uuid.uuid4()),
             'Date': datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ'),
-            'Author': session['user'],  # 假设已通过登录流程设置
+            'Author': session['user'],
             'Content': content,
             'Replys': 0,
             'Associate': 'None',
@@ -100,11 +100,11 @@ def forum_specific():
     date = request.args.get('date')
     # print("ID here")
     # print(id)
-    # 获取指定的论坛帖子
+    # get specific forum
     response = forum_table.get_item(Key={'ID': id,'Date':date})
     forum = response.get('Item', {})
 
-    # 获取回复
+    # get replys
     replies = forum_table.scan(
         FilterExpression=Attr('Associate').eq(id)
     ).get('Items', [])
@@ -114,13 +114,13 @@ def forum_specific():
 
 @app.route('/logout')
 def logout():
-    session.pop('user', None)  # 移除用户session
+    session.pop('user', None)  # pop session
     return redirect(url_for('login'))
 
 @app.route('/reply', methods=['POST'])
 def post_reply():
     if 'user' not in session:
-        # 用户未登录
+        # if not log in
         flash('Please log in to reply.')
         return redirect(url_for('login'))
 
@@ -128,7 +128,7 @@ def post_reply():
     forum_date = request.form['forum_date']
 
     content = request.form['content']
-    user_email = session['user']  # 假设用户email已存储在session中
+    user_email = session['user']
 
     # 添加回复到DynamoDB
     reply_id = str(uuid.uuid4())
@@ -140,14 +140,14 @@ def post_reply():
         'Content': content,
         'Replys': 0,
         'Associate': forum_id,
-        'Topic': ''  # 回复没有Topic
+        'Topic': ''
     })
 
-    # 更新原帖子的Replys计数
+    # update count
     forum_table.update_item(
         Key={
             'ID': forum_id,
-            'Date': forum_date  # 使用Date作为排序键
+            'Date': forum_date
         },
         UpdateExpression='SET Replys = Replys + :val',
         ExpressionAttributeValues={':val': 1}
