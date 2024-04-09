@@ -18,6 +18,7 @@ from wtforms import StringField, PasswordField, SubmitField, HiddenField, RadioF
 from wtforms.fields.simple import TextAreaField
 from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
 from flask_wtf.csrf import CSRFProtect
+import hashlib
 
 
 
@@ -81,7 +82,7 @@ def login():
 
         # Check password and captcha
         response = table.get_item(Key={'Email_address': account_id})
-        if 'Item' not in response or response['Item']['password'] != password:
+        if 'Item' not in response or hash_password(password) != response['Item']['password']:
             error = 'Invalid Credentials. Please try again.'
         elif captcha.lower() != session.get('captcha', '').lower():
             error = 'Invalid captcha. Please try again.'
@@ -150,9 +151,10 @@ def registration():
                 error = 'Invalid captcha. Please try again.'
             else:
                 # add account
+                hashed_password = hash_password(password)
                 table.put_item(Item={
                     'Email_address': email_address,
-                    'password': password,
+                    'password': hashed_password,
                     'Role': 'student',
                     'Authenticate': 'disabled'  # set default Authenticate as disabled
                 })
@@ -288,14 +290,15 @@ def change_password():
         # get user information
         user = table.get_item(Key={'Email_address': user_email}).get('Item', {})
 
-        if user['password'] != current_password:
+        if hash_password(current_password) != user['password']:
             form.current_password.errors.append('Current password is incorrect.')
         else:
             # update password
+            hashed_new_password = hash_password(new_password)
             table.update_item(
                 Key={'Email_address': user_email},
                 UpdateExpression='SET password = :val',
-                ExpressionAttributeValues={':val': new_password}
+                ExpressionAttributeValues={':val': hashed_new_password}
             )
             logout()
             flash('Password changed successfully. Please login again.')
@@ -497,6 +500,9 @@ def generate_captcha_image(captcha_text):
     captcha_data = image.generate(captcha_text)
     captcha_image = Image.open(captcha_data)
     return captcha_image
+
+def hash_password(password):
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 if __name__ == '__main__':
     app.run(debug=True)
