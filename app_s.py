@@ -13,12 +13,37 @@ from io import BytesIO
 from flask import send_file
 from urllib.parse import urlencode
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
+from flask_wtf import FlaskForm, form
+from wtforms import StringField, PasswordField, SubmitField, HiddenField, RadioField
+from wtforms.fields.simple import TextAreaField
+from wtforms.validators import DataRequired, Email, EqualTo, ValidationError
+from flask_wtf.csrf import CSRFProtect
+import hashlib
+
+
+
+
+class ChangePasswordForm(FlaskForm):
+    current_password = PasswordField('Current Password', validators=[DataRequired()])
+    new_password = PasswordField('New Password', validators=[DataRequired()])
+    confirm_new_password = PasswordField('Confirm New Password', validators=[DataRequired(), EqualTo('new_password', message='Passwords must match.')])
+    submit = SubmitField('Change Password')
+
+
+
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 app.config['SESSION_REFRESH_EACH_REQUEST'] = False
 app.permanent_session_lifetime = timedelta(minutes=30)
 app.config['SECRET_KEY'] = os.urandom(24).hex()
+
+csrf = CSRFProtect(app)
+
+
+
+
+
 
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
@@ -40,10 +65,12 @@ app.config['MAIL_USE_UNICODE'] = True
 mail = Mail(app)
 
 @app.route('/', methods=['GET', 'POST'])
+@csrf.exempt
 def home():
     return redirect(url_for('login'))
 
 @app.route('/login', methods=['GET', 'POST'])
+@csrf.exempt
 def login():
     error = None
     account_id = request.form.get('account_id', '')
@@ -55,7 +82,7 @@ def login():
 
         # Check password and captcha
         response = table.get_item(Key={'Email_address': account_id})
-        if 'Item' not in response or response['Item']['password'] != password:
+        if 'Item' not in response or hash_password(password) != response['Item']['password']:
             error = 'Invalid Credentials. Please try again.'
         elif captcha.lower() != session.get('captcha', '').lower():
             error = 'Invalid captcha. Please try again.'
@@ -94,6 +121,7 @@ def login():
                            message=message)
 
 @app.route('/registration', methods=['GET', 'POST'])
+@csrf.exempt
 def registration():
     error = None
     if request.method == 'POST':
@@ -123,9 +151,10 @@ def registration():
                 error = 'Invalid captcha. Please try again.'
             else:
                 # add account
+                hashed_password = hash_password(password)
                 table.put_item(Item={
                     'Email_address': email_address,
-                    'password': password,
+                    'password': hashed_password,
                     'Role': 'student',
                     'Authenticate': 'disabled'  # set default Authenticate as disabled
                 })
@@ -134,6 +163,7 @@ def registration():
     return render_template('registration_s.html', error=error)
 
 @app.route('/waiting')
+@csrf.exempt
 def waiting():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -141,6 +171,7 @@ def waiting():
     return render_template('waiting.html')
 
 @app.route('/check_access')
+@csrf.exempt
 def check_access():
     if 'user' not in session:
         return jsonify({'allowed': False})
@@ -163,6 +194,7 @@ def check_access():
     return jsonify({'allowed': False})
 
 @app.route('/verify', methods=['GET', 'POST'])
+@csrf.exempt
 def verify():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -181,6 +213,7 @@ def verify():
     return render_template('verify.html', error=error)
 
 @app.route('/authenticate/<token>', methods=['GET', 'POST'])
+@csrf.exempt
 def authenticate(token):
     s = Serializer(app.config['SECRET_KEY'])
     try:
@@ -205,6 +238,7 @@ def authenticate(token):
     return render_template('authenticate.html', error=error, user_email=user_email)
 
 @app.route('/confirm', methods=['GET', 'POST'])
+@csrf.exempt
 def confirm():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -230,6 +264,7 @@ def confirm():
     return render_template('confirm.html', requests=requests)
 
 @app.route('/profile')
+@csrf.exempt
 def profile():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -240,38 +275,40 @@ def profile():
 
     return render_template('profile.html', user_email=user_email, authenticate_status=authenticate_status)
 
+
 @app.route('/change_password', methods=['GET', 'POST'])
 def change_password():
     if 'user' not in session:
         return redirect(url_for('login'))
 
+    form = ChangePasswordForm()
     user_email = session['user']
-    error = None
 
-    if request.method == 'POST':
-        current_password = request.form['current_password']
-        new_password = request.form['new_password']
-        confirm_password = request.form['confirm_password']
-
+    if form.validate_on_submit():
+        current_password = form.current_password.data
+        new_password = form.new_password.data
+        # get user information
         user = table.get_item(Key={'Email_address': user_email}).get('Item', {})
 
-        if user['password'] != current_password:
-            error = 'Current password is incorrect.'
-        elif new_password != confirm_password:
-            error = 'New password and confirm password do not match.'
+        if hash_password(current_password) != user['password']:
+            form.current_password.errors.append('Current password is incorrect.')
         else:
+            # update password
+            hashed_new_password = hash_password(new_password)
             table.update_item(
                 Key={'Email_address': user_email},
                 UpdateExpression='SET password = :val',
-                ExpressionAttributeValues={':val': new_password}
+                ExpressionAttributeValues={':val': hashed_new_password}
             )
             logout()
-            flash('Password changed successfully. Please log in again.')
+            flash('Password changed successfully. Please login again.')
             return redirect(url_for('login'))
 
-    return render_template('change_password.html', error=error)
+    return render_template('change_password.html', form=form)
+
 
 @app.route('/toggle_authenticate', methods=['POST'])
+@csrf.exempt
 def toggle_authenticate():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -293,6 +330,7 @@ def toggle_authenticate():
     return redirect(url_for('profile'))
 
 @app.route('/forum')
+@csrf.exempt
 def forum():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -311,6 +349,7 @@ def forum():
     # return render_template('forum_w.html', forums=forums, user_role=user_role)
 
 @app.route('/create_forum', methods=['GET', 'POST'])
+@csrf.exempt
 def create_forum():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -333,6 +372,7 @@ def create_forum():
     return render_template('create_forum_w.html')
 
 @app.route('/delete_forum', methods=['POST'])
+@csrf.exempt
 def delete_forum():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -354,6 +394,7 @@ def delete_forum():
     return redirect(url_for('forum'))
 
 @app.route('/forum_specific')
+@csrf.exempt
 def forum_specific():
     if 'user' not in session:
         return redirect(url_for('login'))
@@ -373,11 +414,13 @@ def forum_specific():
     return render_template('forum_specific_w.html', forum=forum, replies=replies)
 
 @app.route('/logout')
+@csrf.exempt
 def logout():
     session.pop('user', None)
     return redirect(url_for('login'))
 
 @app.route('/reply', methods=['POST'])
+@csrf.exempt
 def post_reply():
     if 'user' not in session:
         flash('Please log in to reply.')
@@ -415,6 +458,7 @@ def post_reply():
     return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
 
 @app.route('/captcha')
+@csrf.exempt
 def captcha():
     # Generate captcha image
     captcha_text = generate_captcha()
@@ -456,6 +500,9 @@ def generate_captcha_image(captcha_text):
     captcha_data = image.generate(captcha_text)
     captcha_image = Image.open(captcha_data)
     return captcha_image
+
+def hash_password(password):
+    return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
 if __name__ == '__main__':
     app.run(debug=True)
