@@ -88,7 +88,7 @@ def login():
             error = 'Invalid captcha. Please try again.'
         else:
             session['user'] = account_id
-            session.permanent = True  # 设置session为永久性的
+            session.permanent = True
             confirm_table.put_item(Item={
                 'Email_address': account_id,
                 'Timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
