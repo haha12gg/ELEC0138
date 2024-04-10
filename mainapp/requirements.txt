@@ -1,10 +1,9 @@
 boto3==1.29.1
 django_recaptcha==4.0.0
 Flask==2.2.5
-Flask_Mail==0.9.1
-flask_wtf==1.2.1
+Flask-Mail==0.9.1
+flask-WTF==1.2.1
 itsdangerous==2.0.1
 Pillow==10.3.0
 WTForms==3.1.2
-captcha
-
+captcha==0.5.0
