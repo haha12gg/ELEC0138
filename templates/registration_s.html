@@ -64,6 +64,7 @@
                     <input type="text" class="form-control" placeholder="Captcha" name="captcha">
                 </div>
                 <button class="btn btn-lg btn-primary btn-block" type="submit" name="action" value="Register">Register</button>
+                <div class="mt-3"> <small>By clicking Register, you agree that the provided email address will only be used to receive verification codes for logging into the forum, and you will not receive any other emails from this website. You have the right to edit or delete any discussion posts you make on the forum at any time.</small> </div>
                 {% if error %}
                 <div class="alert alert-danger mt-3" role="alert">
                     {{ error }}
