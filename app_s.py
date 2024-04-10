@@ -345,7 +345,7 @@ def forum():
     # Get current role and check if turn on the MFA
     user_role = table.get_item(Key={'Email_address': session['user']}).get('Item', {}).get('Role', 'student')
     mfa_enabled = table.get_item(Key={'Email_address': session['user']}).get('Item', {}).get('Authenticate', 'disabled') == 'enabled'
-    return render_template('forum_w.html', forums=forums, user_role=user_role, mfa_enabled=mfa_enabled)
+    return render_template('forum_w.html', forums=forums, user_role=user_role, mfa_enabled=mfa_enabled, session=session)
     # return render_template('forum_w.html', forums=forums, user_role=user_role)
 
 @app.route('/create_forum', methods=['GET', 'POST'])
@@ -380,6 +380,17 @@ def delete_forum():
     forum_id = request.form['forum_id']
     forum_date = request.form['forum_date']
 
+    # Get the forum
+    forum = forum_table.get_item(Key={'ID': forum_id, 'Date': forum_date}).get('Item', {})
+
+    # Check if the user is admin or the author of the forum
+    user_email = session['user']
+    user_role = table.get_item(Key={'Email_address': user_email}).get('Item', {}).get('Role', 'student')
+
+    if user_role != 'admin' and forum.get('Author') != user_email:
+        flash('You do not have permission to delete this forum.')
+        return redirect(url_for('forum'))
+
     # Delete Main Forum
     forum_table.delete_item(Key={'ID': forum_id, 'Date': forum_date})
 
@@ -411,7 +422,64 @@ def forum_specific():
     ).get('Items', [])
     replies.sort(key=lambda x: x['Date'], reverse=False)
 
-    return render_template('forum_specific_w.html', forum=forum, replies=replies)
+    return render_template('forum_specific_w.html', forum=forum, replies=replies,session=session)
+
+@app.route('/delete_reply', methods=['POST'])
+@csrf.exempt
+def delete_reply():
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    reply_id = request.form['reply_id']
+    reply_date = request.form['reply_date']
+    forum_id = request.form['forum_id']
+    forum_date = request.form['forum_date']
+
+    # Get the reply
+    reply = forum_table.get_item(Key={'ID': reply_id, 'Date': reply_date}).get('Item', {})
+
+    # Check if the user is admin or the author of the reply
+    user_email = session['user']
+    user_role = table.get_item(Key={'Email_address': user_email}).get('Item', {}).get('Role', 'student')
+
+    if user_role != 'admin' and reply.get('Author') != user_email:
+        flash('You do not have permission to delete this reply.')
+    else:
+        # Delete reply
+        forum_table.delete_item(Key={'ID': reply_id, 'Date': reply_date})
+
+        # Update number of replies
+        forum_table.update_item(
+            Key={
+                'ID': forum_id,
+                'Date': forum_date
+            },
+            UpdateExpression='SET Replys = Replys - :val',
+            ExpressionAttributeValues={':val': 1}
+        )
+
+    return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
+
+@app.route('/edit_reply/<reply_id>/<reply_date>/<forum_id>/<forum_date>', methods=['GET', 'POST'])
+@csrf.exempt
+def edit_reply(reply_id, reply_date, forum_id, forum_date):
+    if 'user' not in session:
+        return redirect(url_for('login'))
+
+    if request.method == 'POST':
+        content = request.form['content']
+        forum_table.update_item(
+            Key={
+                'ID': reply_id,
+                'Date': reply_date
+            },
+            UpdateExpression='SET Content = :val',
+            ExpressionAttributeValues={':val': content}
+        )
+        return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
+
+    reply = forum_table.get_item(Key={'ID': reply_id, 'Date': reply_date}).get('Item', {})
+    return render_template('edit_reply.html', reply=reply, forum_id=forum_id, forum_date=forum_date)
 
 @app.route('/logout')
 @csrf.exempt

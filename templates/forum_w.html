@@ -102,9 +102,9 @@
                     <th>Date</th>
                     <th>Replies</th>
                     <th>Action</th>
-                    {% if user_role == 'admin' %}
-                    <th>Admin Action</th>
-                    {% endif %}
+<!--                    {% if user_role == 'admin' %}-->
+<!--                    <th>Admin Action</th>-->
+<!--                    {% endif %}-->
                 </tr>
             </thead>
             <tbody>
@@ -116,16 +116,14 @@
                     <td>{{ forum.Replys }}</td>
                     <td>
                         <a href="{{ url_for('forum_specific', id=forum.ID, date=forum.Date) }}" class="btn btn-primary btn-sm">View</a>
-                    </td>
-                    {% if user_role == 'admin' %}
-                    <td>
+                        {% if user_role == 'admin' or forum.Author == session['user'] %}
                         <form action="{{ url_for('delete_forum') }}" method="post" class="d-inline">
                             <input type="hidden" name="forum_id" value="{{ forum.ID }}">
                             <input type="hidden" name="forum_date" value="{{ forum.Date }}">
-                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                            <button type="submit" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure you want to delete this reply?')">Delete</button>
                         </form>
+                        {% endif %}
                     </td>
-                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
