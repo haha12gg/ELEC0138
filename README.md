@@ -33,7 +33,7 @@ After running the respective application, access the webpage by following the ad
 This forum supports multi-factor authentication to enhance account security. After activating MFA, the login process is as follows:
 1. **Enter your username and password.**
 2. **Enter the verification code received in your email.**
-3. **Visit the URL provided in the email to open a new web page.**
+3. **open a new web tab and visit the URL provided in the email.**
 4. **On this page, enter your username and the random code from the email.**
 5. **Decide whether to authorize the login.**
 6. **If you agree, the login process will be completed.**
