@@ -40,11 +40,6 @@ app.config['SECRET_KEY'] = os.urandom(24).hex()
 
 csrf = CSRFProtect(app)
 
-
-
-
-
-
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
                           aws_access_key_id='AKIA4MTWN2ZSFUOUEKGY',
@@ -64,10 +59,12 @@ app.config['MAIL_USE_UNICODE'] = True
 
 mail = Mail(app)
 
+
 @app.route('/', methods=['GET', 'POST'])
 @csrf.exempt
 def home():
     return redirect(url_for('login'))
+
 
 @app.route('/login', methods=['GET', 'POST'])
 @csrf.exempt
@@ -120,6 +117,7 @@ def login():
                            password=password,
                            message=message)
 
+
 @app.route('/registration', methods=['GET', 'POST'])
 @csrf.exempt
 def registration():
@@ -162,6 +160,7 @@ def registration():
 
     return render_template('registration_s.html', error=error)
 
+
 @app.route('/waiting')
 @csrf.exempt
 def waiting():
@@ -169,6 +168,7 @@ def waiting():
         return redirect(url_for('login'))
 
     return render_template('waiting.html')
+
 
 @app.route('/check_access')
 @csrf.exempt
@@ -193,6 +193,7 @@ def check_access():
 
     return jsonify({'allowed': False})
 
+
 @app.route('/verify', methods=['GET', 'POST'])
 @csrf.exempt
 def verify():
@@ -211,6 +212,7 @@ def verify():
             error = 'Invalid verification code. Please try again.'
 
     return render_template('verify.html', error=error)
+
 
 @app.route('/authenticate/<token>', methods=['GET', 'POST'])
 @csrf.exempt
@@ -237,6 +239,7 @@ def authenticate(token):
 
     return render_template('authenticate.html', error=error, user_email=user_email)
 
+
 @app.route('/confirm', methods=['GET', 'POST'])
 @csrf.exempt
 def confirm():
@@ -262,6 +265,7 @@ def confirm():
     requests = response.get('Items', [])
 
     return render_template('confirm.html', requests=requests)
+
 
 @app.route('/profile')
 @csrf.exempt
@@ -329,6 +333,7 @@ def toggle_authenticate():
 
     return redirect(url_for('profile'))
 
+
 @app.route('/forum')
 @csrf.exempt
 def forum():
@@ -347,6 +352,7 @@ def forum():
     mfa_enabled = table.get_item(Key={'Email_address': session['user']}).get('Item', {}).get('Authenticate', 'disabled') == 'enabled'
     return render_template('forum_w.html', forums=forums, user_role=user_role, mfa_enabled=mfa_enabled, session=session)
     # return render_template('forum_w.html', forums=forums, user_role=user_role)
+
 
 @app.route('/create_forum', methods=['GET', 'POST'])
 @csrf.exempt
@@ -370,6 +376,7 @@ def create_forum():
         return redirect(url_for('forum'))
 
     return render_template('create_forum_w.html')
+
 
 @app.route('/delete_forum', methods=['POST'])
 @csrf.exempt
@@ -404,6 +411,7 @@ def delete_forum():
 
     return redirect(url_for('forum'))
 
+
 @app.route('/forum_specific')
 @csrf.exempt
 def forum_specific():
@@ -423,6 +431,7 @@ def forum_specific():
     replies.sort(key=lambda x: x['Date'], reverse=False)
 
     return render_template('forum_specific_w.html', forum=forum, replies=replies,session=session)
+
 
 @app.route('/delete_reply', methods=['POST'])
 @csrf.exempt
@@ -460,6 +469,7 @@ def delete_reply():
 
     return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
 
+
 @app.route('/edit_reply/<reply_id>/<reply_date>/<forum_id>/<forum_date>', methods=['GET', 'POST'])
 @csrf.exempt
 def edit_reply(reply_id, reply_date, forum_id, forum_date):
@@ -480,6 +490,7 @@ def edit_reply(reply_id, reply_date, forum_id, forum_date):
 
     reply = forum_table.get_item(Key={'ID': reply_id, 'Date': reply_date}).get('Item', {})
     return render_template('edit_reply.html', reply=reply, forum_id=forum_id, forum_date=forum_date)
+
 
 @app.route('/logout')
 @csrf.exempt
@@ -525,6 +536,7 @@ def post_reply():
 
     return redirect(url_for('forum_specific', id=forum_id, date=forum_date))
 
+
 @app.route('/captcha')
 @csrf.exempt
 def captcha():
@@ -539,17 +551,21 @@ def captcha():
     img_io.seek(0)
     return send_file(img_io, mimetype='image/png')
 
+
 @app.template_filter('formatdatetime')
 def format_datetime_filter(datetime_str):
     return datetime_str.replace('T', ' ').replace('Z', '')
+
 
 def generate_verification_code():
     characters = ''.join(random.choices(string.digits, k=6))
     return characters
 
+
 def generate_random_code():
     characters = string.ascii_letters + string.digits
     return ''.join(random.choices(characters, k=24))
+
 
 def send_verification_email(email, code, random_code, authenticate_url=""):
     msg = Message('Verification Code', sender=app.config['MAIL_USERNAME'], recipients=[email])
@@ -559,9 +575,11 @@ def send_verification_email(email, code, random_code, authenticate_url=""):
         msg.body = f'Your verification code is: {code}'.encode('utf-8')
     mail.send(msg)
 
+
 def generate_captcha():
     captcha_text = ''.join(random.choices(string.digits, k=6))
     return captcha_text
+
 
 def generate_captcha_image(captcha_text):
     image = ImageCaptcha()
@@ -569,8 +587,11 @@ def generate_captcha_image(captcha_text):
     captcha_image = Image.open(captcha_data)
     return captcha_image
 
+
 def hash_password(password):
     return hashlib.sha256(password.encode('utf-8')).hexdigest()
 
+
 if __name__ == '__main__':
+    # app.run(ssl_context='adhoc')
     app.run(debug=True)
