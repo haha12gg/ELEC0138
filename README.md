@@ -9,15 +9,17 @@ Before running the project, please ensure that the necessary libraries are insta
 
 ```bash
 pip install cryptography
+```
 
 If you are using Python version 3.6 or above, you will also need to install an additional dependency:
 ```bash
 pip install idna
+```
 
 Other required libraries can be installed via the requirements file:
 ```bash
 pip install -r requirements.txt
-
+```
 ## Project Structure and Execution
 The project contains two main application versions, located in the **`mainapp`** folder:
 
