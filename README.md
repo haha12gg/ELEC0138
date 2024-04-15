@@ -38,7 +38,7 @@ This forum supports multi-factor authentication to enhance account security. Aft
 5. **Decide whether to authorize the login.**
 6. **If you agree, the login process will be completed.**
 
-###CSRF Tokens
+### CSRF Tokens
 To prevent cross-site request forgery, the enhanced application app_s uses CSRF token protection.
 
 ## Note
