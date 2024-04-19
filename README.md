@@ -42,7 +42,7 @@ This forum supports multi-factor authentication to enhance account security. Aft
 To prevent cross-site request forgery, the enhanced application app_s uses CSRF token protection.
 
 ## Note
-Due to AWS requirements, keys and access keys cannot be uploaded to a public GitHub repository. Therefore, we have included these keys in report 23104401. Replacing the content in the code's placeholders with the values from the report will enable the code to run successfully. The variables that need to be replaced are aws_access_key_id, aws_secret_access_key, app.config['MAIL_USERNAME'], and app.config['MAIL_PASSWORD']. To ensure successful execution, please replace these variables in the code with the values from report 23104401 before running the code.
+Due to AWS requirements, keys and access keys cannot be uploaded to a public GitHub repository. Therefore, we have included these keys in ELEC0138Coursework_23104401 report. Replacing the content in the code's placeholders with the values from the report will enable the code to run successfully. The variables that need to be replaced are aws_access_key_id, aws_secret_access_key, app.config['MAIL_USERNAME'], and app.config['MAIL_PASSWORD']. To ensure successful execution, please replace these variables in the code with the values from ELEC0138Coursework_23104401 report before running the code.
 
 As the webpages use computer self-signed SSL/TLS certificates for HTTPS communication, the communication is encrypted, but browsers will warn that the certificate is not trusted because it is not issued by an authoritative CA.
 
