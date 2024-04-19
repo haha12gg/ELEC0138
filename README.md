@@ -54,5 +54,6 @@ The design of this project considers real security threats and enhances user saf
 ## Video Link
 https://youtu.be/ngj7c_-N-Pg?si=zuZ-4qDZMw47Hhhf
 
-## Software used to do brute attack
-https://portswigger.net/burp/pro
+## Brute attack
+Link of the software:https://portswigger.net/burp/pro
+The provided passwords.txt are just some weak passwords for demo purposes only, you can add more passwords in the future.
