@@ -42,8 +42,8 @@ csrf = CSRFProtect(app)
 
 # Configure DynamoDB
 dynamodb = boto3.resource('dynamodb', region_name='eu-west-2',
-                          aws_access_key_id='AKIA4MTWN2ZSAC7VNRTW',
-                          aws_secret_access_key='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')
+                          aws_access_key_id='',
+                          aws_secret_access_key='')
 table = dynamodb.Table('Account')
 forum_table = dynamodb.Table('forums_weak')
 confirm_table = dynamodb.Table('confirm')
@@ -52,9 +52,9 @@ confirm_table = dynamodb.Table('confirm')
 app.config['MAIL_SERVER'] = 'smtp.gmail.com'
 app.config['MAIL_PORT'] = 587
 app.config['MAIL_USE_TLS'] = True
-app.config['MAIL_USERNAME'] = 'wujunliang1102@gmail.com'
-app.config['MAIL_PASSWORD'] = 'jfpr wfja ziqh bmvn'
-app.config['MAIL_DEFAULT_SENDER'] = 'wujunliang1102@gmail.com'
+app.config['MAIL_USERNAME'] = ''
+app.config['MAIL_PASSWORD'] = ''
+app.config['MAIL_DEFAULT_SENDER'] = ''
 app.config['MAIL_USE_UNICODE'] = True
 
 mail = Mail(app)
