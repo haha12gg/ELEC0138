@@ -1,4 +1,4 @@
-# ELEC0130 Group L
+# ELEC0138 Group L
 # Online Learning Forum Project Overview
 
 This project simulates an online learning forum and aims to analyze and defend against two major security threats: Brute Force Attacks and Cross-Site Request Forgery (CSRF). The project not only implements the basic functionalities of the forum but also incorporates corresponding security measures.
